@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>PharmaMarket Ultimate | وسيط الصيدليات الذكي</title>
+    <meta name="theme-color" content="#0f766e">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0f766e;
+            --primary-dark: #0d5b56;
+            --secondary: #f59e0b;
+            --bg: #f0f4f8;
+            --surface: rgba(255,255,255,0.85);
+            --glass: rgba(255,255,255,0.7);
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: rgba(0,0,0,0.08);
+            --shadow: 0 8px 32px rgba(0,0,0,0.08);
+            --radius: 20px;
+        }
+        .dark {
+            --bg: #0f172a;
+            --surface: rgba(30,30,50,0.85);
+            --glass: rgba(30,30,50,0.7);
+            --text: #e2e8f0;
+            --text-light: #94a3b8;
+            --border: rgba(255,255,255,0.1);
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            transition: background 0.3s;
+        }
+        .app {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .navbar {
+            background: var(--surface);
+            backdrop-filter: blur(20px);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+        }
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: var(--primary);
+        }
+        .nav-links a, .nav-links button {
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 500;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 8px 12px;
+            border-radius: 12px;
+            transition: 0.3s;
+        }
+        .nav-links a:hover, .nav-links button:hover { background: var(--border); }
+        .btn-primary {
+            background: var(--primary);
+            color: white !important;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: bold;
+        }
+        .cart-icon {
+            position: relative;
+            font-size: 1.4rem;
+            cursor: pointer;
+        }
+        .cart-count {
+            position: absolute;
+            top: -8px; right: -8px;
+            background: var(--secondary);
+            color: #000;
+            border-radius: 50%;
+            width: 20px; height: 20px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.7rem; font-weight: bold;
+        }
+        .main-content { flex: 1; padding: 2rem; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .card {
+            background: var(--surface);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s, box-shadow 0.2s;
+            animation: slideUp 0.4s ease both;
+        }
+        @keyframes slideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+        .card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.12); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1.5rem; }
+        .order-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem; font-weight: bold;
+        }
+        .pending { background: #fef3c7; color: #92400e; }
+        .accepted { background: #dbeafe; color: #1e40af; }
+        .out_for_delivery { background: #d1fae5; color: #065f46; }
+        .delivered { background: #a7f3d0; color: #065f46; }
+        .rejected { background: #fee2e2; color: #991b1b; }
+        .modal {
+            position: fixed; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        }
+        .modal.active { opacity: 1; pointer-events: auto; }
+        .modal-content {
+            background: var(--surface);
+            backdrop-filter: blur(30px);
+            border-radius: 28px;
+            padding: 2rem;
+            max-width: 400px; width: 90%;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            transform: translateY(20px); transition: transform 0.3s;
+        }
+        .modal.active .modal-content { transform: translateY(0); }
+        input, select, textarea {
+            width: 100%; padding: 12px; margin: 8px 0;
+            border: 1px solid var(--border); border-radius: 12px;
+            background: var(--glass); color: var(--text); font-family: inherit;
+        }
+        .toast {
+            position: fixed; bottom: 20px; left: 20px;
+            background: var(--primary); color: white;
+            padding: 1rem 1.5rem; border-radius: 30px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s ease; z-index: 300;
+        }
+        @keyframes slideIn { from { transform: translateY(100px); opacity:0; } to { transform: translateY(0); opacity:1; } }
+        .pulse { animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(15,118,110,0.4); } 70% { box-shadow: 0 0 0 10px rgba(15,118,110,0); } 100% { box-shadow: 0 0 0 0 rgba(15,118,110,0); } }
+        @media (max-width: 768px) {
+            .navbar { flex-direction: column; gap: 10px; }
+            .main-content { padding: 1rem; }
+        }
+    </style>
+</head>
+<body class="light">
+<div class="app">
+    <nav class="navbar">
+        <div class="logo"><i class="fas fa-capsules"></i> PharmaMarket Ultimate</div>
+        <div class="nav-links" id="navLinks"></div>
+    </nav>
+    <div class="main-content" id="appContent"></div>
+    <div id="toastContainer"></div>
+</div>
+<div class="modal" id="globalModal"><div class="modal-content" id="modalContent"></div></div>
+
+<script>
+// ========== قاعدة البيانات المحسّنة ==========
+const DB_KEY = 'pharma_ultimate_db';
+let DB;
+function loadDB() {
+    const saved = localStorage.getItem(DB_KEY);
+    if (saved) {
+        DB = JSON.parse(saved);
+    } else {
+        DB = {
+            users: [
+                { id:1, username:'admin', password:'admin', role:'admin', lastLogin:null, loginCount:0 },
+                { id:2, username:'صيدلية1', password:'123', role:'pharmacy', lastLogin:null, loginCount:0 },
+                { id:3, username:'صيدلية2', password:'123', role:'pharmacy', lastLogin:null, loginCount:0 },
+                { id:4, username:'عميل1', password:'123', role:'customer', lastLogin:null, loginCount:0 }
+            ],
+            drugs: [
+                { id:1, name:'بنادول', desc:'مسكن وخافض حرارة', price:25, icon:'💊' },
+                { id:2, name:'بروفين', desc:'مضاد التهاب', price:35, icon:'💊' },
+                { id:3, name:'أوجمنتين', desc:'مضاد حيوي', price:80, icon:'💊' },
+                { id:4, name:'كونكور', desc:'علاج ضغط الدم', price:45, icon:'💊' },
+                { id:5, name:'زيرتك', desc:'مضاد حساسية', price:20, icon:'💊' },
+                { id:6, name:'جلوكوفاج', desc:'علاج السكر', price:30, icon:'💊' }
+            ],
+            orders: [],
+            settings: {
+                profitPercent: 10  // نسبة الربح الافتراضية
+            },
+            nextUserId: 5
+        };
+        saveDB();
+    }
+}
+function saveDB() { localStorage.setItem(DB_KEY, JSON.stringify(DB)); }
+
+// ========== حالة التطبيق ==========
+let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+let cart = JSON.parse(localStorage.getItem('cart')) || {};
+function persistCart() { localStorage.setItem('cart', JSON.stringify(cart)); }
+function persistUser() { localStorage.setItem('currentUser', JSON.stringify(currentUser)); }
+
+// ========== تنبيهات ==========
+function toast(msg) {
+    const div = document.createElement('div');
+    div.className = 'toast';
+    div.textContent = msg;
+    document.getElementById('toastContainer').appendChild(div);
+    setTimeout(() => div.remove(), 2000);
+}
+
+// ========== تحديث شريط التنقل ==========
+function updateNav() {
+    const nav = document.getElementById('navLinks');
+    if (!currentUser) {
+        nav.innerHTML = `<a href="#" onclick="navigate('home')">الرئيسية</a>
+                         <a href="#" onclick="showLogin()">دخول</a>
+                         <a href="#" onclick="showRegister()" class="btn-primary">تسجيل</a>`;
+    } else {
+        const role = currentUser.role;
+        let links = `<a href="#" onclick="navigate('home')">الرئيسية</a>`;
+        if (role === 'customer') {
+            links += `<a href="#" onclick="navigate('customer-dashboard')">طلباتي</a>`;
+            const count = Object.values(cart).reduce((a,b)=>a+b,0);
+            links += `<span class="cart-icon" onclick="showCart()"><i class="fas fa-shopping-cart"></i><span class="cart-count">${count}</span></span>`;
+        } else if (role === 'pharmacy') {
+            links += `<a href="#" onclick="navigate('pharmacy-dashboard')">الطلبات الواردة</a>`;
+        } else if (role === 'admin') {
+            links += `<a href="#" onclick="navigate('admin-dashboard')">لوحة التحكم</a>`;
+        }
+        links += `<span style="margin-left:10px;">${currentUser.username} (${role})</span>`;
+        links += `<a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i></a>`;
+        nav.innerHTML = links;
+    }
+}
+
+function logout() {
+    currentUser = null; persistUser();
+    cart = {}; persistCart();
+    updateNav(); navigate('home');
+    toast('تم تسجيل الخروج');
+}
+
+// ========== التنقل بين الصفحات ==========
+function navigate(page) {
+    const content = document.getElementById('appContent');
+    switch(page) {
+        case 'home': renderHome(); break;
+        case 'customer-dashboard': if(currentUser?.role==='customer') renderCustomerDashboard(); else navigate('home'); break;
+        case 'pharmacy-dashboard': if(currentUser?.role==='pharmacy') renderPharmacyDashboard(); else navigate('home'); break;
+        case 'admin-dashboard': if(currentUser?.role==='admin') renderAdminDashboard(); else navigate('home'); break;
+    }
+    updateNav();
+}
+
+// ========== الرئيسية (قائمة الأدوية + سلة) ==========
+function renderHome() {
+    let html = `<h2 style="margin-bottom:1.5rem;"><i class="fas fa-pills"></i> الأدوية المتوفرة</h2><div class="grid">`;
+    DB.drugs.forEach(d => {
+        html += `<div class="card drug-card" style="cursor:pointer;" onclick="addToCart(${d.id})">
+                    <div style="font-size:3rem;text-align:center;">${d.icon||'💊'}</div>
+                    <h3 style="text-align:center;">${d.name}</h3>
+                    <p style="text-align:center;">${d.desc}</p>
+                    <div class="price" style="text-align:center;">${d.price} ج.م</div>
+                    ${currentUser?.role==='customer' ? `<button class="btn-primary" style="margin-top:10px;width:100%;" onclick="event.stopPropagation();addToCart(${d.id})"><i class="fas fa-cart-plus"></i> أضف للسلة</button>` : ''}
+                 </div>`;
+    });
+    html += `</div>`;
+    if (currentUser?.role === 'customer') {
+        html += `<div id="cartPreview" style="margin-top:2rem;"></div>`;
+    }
+    document.getElementById('appContent').innerHTML = html;
+    if (currentUser?.role === 'customer') updateCartPreview();
+}
+
+function addToCart(drugId) {
+    if (!currentUser || currentUser.role !== 'customer') { toast('يجب تسجيل الدخول كعميل'); return; }
+    cart[drugId] = (cart[drugId] || 0) + 1;
+    persistCart(); updateNav(); updateCartPreview();
+    toast('تمت الإضافة للسلة');
+}
+
+function updateCartPreview() {
+    const container = document.getElementById('cartPreview');
+    if (!container) return;
+    const items = Object.entries(cart).map(([drugId, qty]) => {
+        const drug = DB.drugs.find(d => d.id == drugId);
+        return drug ? { ...drug, qty } : null;
+    }).filter(Boolean);
+    if (items.length === 0) { container.innerHTML = '<p>السلة فارغة</p>'; return; }
+    let subtotal = items.reduce((s,i) => s + i.price*i.qty, 0);
+    const profitPercent = DB.settings.profitPercent || 10;
+    const total = subtotal * (1 + profitPercent/100);
+    let html = `<div class="card"><h3><i class="fas fa-shopping-basket"></i> سلة التسوق</h3>`;
+    items.forEach(item => {
+        html += `<div style="display:flex;justify-content:space-between;margin:8px 0;">
+                    <span>${item.name} (${item.qty})</span>
+                    <span>${item.price * item.qty} ج.م</span>
+                 </div>`;
+    });
+    html += `<hr><p>الإجمالي الفرعي: ${subtotal} ج.م</p>`;
+    html += `<p>رسوم الخدمة (${profitPercent}%): ${ (subtotal * profitPercent/100).toFixed(2) } ج.م</p>`;
+    html += `<strong>الإجمالي الكلي: ${total.toFixed(2)} ج.م</strong>`;
+    html += `<br><button class="btn-primary pulse" onclick="showOrderForm()">إرسال الطلب للصيدلية</button></div>`;
+    container.innerHTML = html;
+}
+
+function showCart() { navigate('home'); setTimeout(() => document.getElementById('cartPreview')?.scrollIntoView({behavior:'smooth'}),100); }
+
+// ========== نموذج تقديم الطلب (بيانات العميل) ==========
+function showOrderForm() {
+    document.getElementById('modalContent').innerHTML = `
+        <h2>إتمام الطلب</h2>
+        <input id="custName" placeholder="الاسم الكامل *" required>
+        <input id="custAddress" placeholder="العنوان بالتفصيل *" required>
+        <input id="custPhone" placeholder="رقم الهاتف *" required>
+        <textarea id="custNote" placeholder="ملاحظات إضافية (اختياري)"></textarea>
+        <button class="btn-primary" onclick="submitOrder()">تأكيد الطلب</button>
+        <button onclick="closeModal()">إلغاء</button>
+    `;
+    document.getElementById('globalModal').classList.add('active');
+}
+
+function submitOrder() {
+    const name = document.getElementById('custName').value.trim();
+    const address = document.getElementById('custAddress').value.trim();
+    const phone = document.getElementById('custPhone').value.trim();
+    const note = document.getElementById('custNote').value.trim();
+    if (!name || !address || !phone) { alert('يرجى ملء جميع البيانات المطلوبة'); return; }
+
+    const items = Object.entries(cart).map(([drugId, qty]) => {
+        const drug = DB.drugs.find(d => d.id == drugId);
+        return { drugId: drug.id, name: drug.name, price: drug.price, quantity: qty };
+    });
+    const subtotal = items.reduce((s,i) => s + i.price*i.quantity, 0);
+    const profitPercent = DB.settings.profitPercent || 10;
+    const total = subtotal * (1 + profitPercent/100);
+
+    // اختيار أول صيدلية (يمكن تطويرها لاختيار صيدلية معينة)
+    const pharmacy = DB.users.find(u => u.role === 'pharmacy');
+    if (!pharmacy) { toast('لا توجد صيدلية متاحة حالياً'); return; }
+
+    const order = {
+        id: Date.now(),
+        customerId: currentUser.id,
+        customerName: name,
+        customerAddress: address,
+        customerPhone: phone,
+        customerNote: note,
+        pharmacyId: pharmacy.id,
+        pharmacyName: pharmacy.username,
+        status: 'pending',
+        items,
+        subtotal,
+        profitPercent,
+        total,
+        profit: total - subtotal,
+        createdAt: new Date().toISOString(),
+        acceptedAt: null,
+        deliveredAt: null
+    };
+    DB.orders.push(order);
+    cart = {}; persistCart();
+    saveDB();
+    closeModal();
+    updateNav();
+    navigate('customer-dashboard');
+    toast('تم تقديم الطلب بنجاح!');
+}
+
+// ========== لوحة العميل ==========
+function renderCustomerDashboard() {
+    const myOrders = DB.orders.filter(o => o.customerId === currentUser.id).reverse();
+    let html = `<h2>📋 طلباتي</h2>`;
+    if (myOrders.length === 0) html += `<p>لا توجد طلبات</p>`;
+    else {
+        myOrders.forEach(order => {
+            const createdAt = new Date(order.createdAt).toLocaleString();
+            const acceptedAt = order.acceptedAt ? new Date(order.acceptedAt).toLocaleString() : '-';
+            const deliveredAt = order.deliveredAt ? new Date(order.deliveredAt).toLocaleString() : '-';
+            html += `<div class="card">
+                <strong>طلب #${order.id}</strong> - <span class="order-status ${order.status}">${order.status}</span>
+                <p>📅 أنشئ: ${createdAt}</p>
+                <p>✅ قُبل: ${acceptedAt}</p>
+                <p>🚚 وُصّل: ${deliveredAt}</p>
+                <p>💊 العناصر: ${order.items.map(i=>i.name).join(', ')}</p>
+                <p>💰 الإجمالي: ${order.total.toFixed(2)} ج.م</p>
+                <p>🏪 الصيدلية: ${order.pharmacyName}</p>
+            </div>`;
+        });
+    }
+    document.getElementById('appContent').innerHTML = html;
+}
+
+// ========== لوحة الصيدلية ==========
+function renderPharmacyDashboard() {
+    const myOrders = DB.orders.filter(o => o.pharmacyId === currentUser.id).reverse();
+    let html = `<h2>📦 الطلبات الواردة (${myOrders.length})</h2>`;
+    const pendingOrders = myOrders.filter(o => o.status === 'pending');
+    if (pendingOrders.length > 0) {
+        html += `<div class="card pulse" style="background:#e6f7f2; margin-bottom:1rem;">
+            🔊 يوجد ${pendingOrders.length} طلب جديد بانتظار القبول!
+        </div>`;
+    }
+    if (myOrders.length === 0) html += `<p>لا طلبات بعد</p>`;
+    else {
+        myOrders.forEach(order => {
+            const createdAt = new Date(order.createdAt).toLocaleString();
+            html += `<div class="card">
+                <strong>طلب #${order.id}</strong> - <span class="order-status ${order.status}">${order.status}</span>
+                <p>👤 العميل: ${order.customerName}</p>
+                <p>📞 هاتف: ${order.customerPhone}</p>
+                <p>📍 عنوان: ${order.customerAddress}</p>
+                ${order.customerNote ? `<p>📝 ملاحظة: ${order.customerNote}</p>` : ''}
+                <p>💊 العناصر: ${order.items.map(i=>i.name+' x'+i.quantity).join(', ')}</p>
+                <p>💰 الإجمالي: ${order.total.toFixed(2)} ج.م</p>
+                <p>🕒 أنشئ: ${createdAt}</p>
+                ${order.status === 'pending' ? `
+                    <button class="btn-primary" onclick="updateOrder(${order.id},'accepted')">قبول</button>
+                    <button onclick="updateOrder(${order.id},'rejected')" style="background:#c0392b;">رفض</button>
+                ` : ''}
+                ${order.status === 'accepted' ? `<button onclick="updateOrder(${order.id},'out_for_delivery')">توصيل</button>` : ''}
+                ${order.status === 'out_for_delivery' ? `<button onclick="updateOrder(${order.id},'delivered')">تم التسليم</button>` : ''}
+            </div>`;
+        });
+    }
+    document.getElementById('appContent').innerHTML = html;
+}
+
+function updateOrder(orderId, status) {
+    const order = DB.orders.find(o => o.id === orderId);
+    if (!order || order.pharmacyId !== currentUser.id) return;
+    const now = new Date().toISOString();
+    if (status === 'accepted') order.acceptedAt = now;
+    else if (status === 'delivered') order.deliveredAt = now;
+    order.status = status;
+    saveDB();
+    navigate('pharmacy-dashboard');
+    toast(`تم تحديث الطلب إلى ${status}`);
+}
+
+// ========== لوحة المشرف المتكاملة ==========
+function renderAdminDashboard() {
+    const orders = DB.orders;
+    const totalProfit = orders.filter(o=>o.status==='delivered').reduce((sum,o)=>sum+o.profit,0);
+    let html = `<h2>👑 لوحة تحكم المشرف</h2>
+        <div class="grid">
+            <div class="card"><h3>📊 الأرباح الكلية</h3><p>${totalProfit.toFixed(2)} ج.م</p></div>
+            <div class="card"><h3>📋 إجمالي الطلبات</h3><p>${orders.length}</p></div>
+            <div class="card"><h3>👥 المستخدمون</h3><p>${DB.users.length}</p></div>
+            <div class="card"><h3>⚙️ نسبة الربح</h3><p>${DB.settings.profitPercent}%</p>
+                <button class="btn-primary" onclick="editProfit()">تعديل</button></div>
+        </div>
+        <h3 style="margin-top:2rem;">📈 سجل دخول المستخدمين</h3>
+        <div class="card">
+            <table style="width:100%; border-collapse:collapse;">
+                <tr><th>المستخدم</th><th>الدور</th><th>آخر دخول</th><th>عدد الزيارات</th></tr>
+                ${DB.users.map(u => `
+                    <tr>
+                        <td>${u.username}</td><td>${u.role}</td>
+                        <td>${u.lastLogin ? new Date(u.lastLogin).toLocaleString() : 'لم يسجل بعد'}</td>
+                        <td>${u.loginCount}</td>
+                    </tr>`).join('')}
+            </table>
+        </div>
+        <h3 style="margin-top:2rem;">📦 جميع الطلبات</h3>
+        ${orders.reverse().map(order => {
+            const created = new Date(order.createdAt).toLocaleString();
+            return `<div class="card">
+                #${order.id} | ${order.status} | ${created}
+                <br>👤 ${order.customerName} → 🏪 ${order.pharmacyName}
+                <br>💰 ${order.total.toFixed(2)} ج.م (ربح: ${order.profit.toFixed(2)})
+                <br>📞 ${order.customerPhone} | 📍 ${order.customerAddress}
+            </div>`;
+        }).join('')}
+    `;
+    document.getElementById('appContent').innerHTML = html;
+}
+
+function editProfit() {
+    const newPercent = prompt('أدخل نسبة الربح الجديدة (%):', DB.settings.profitPercent);
+    if (newPercent !== null && !isNaN(newPercent) && newPercent >= 0) {
+        DB.settings.profitPercent = parseFloat(newPercent);
+        saveDB();
+        navigate('admin-dashboard');
+        toast(`تم تحديث نسبة الربح إلى ${newPercent}%`);
+    }
+}
+
+// ========== المصادقة ==========
+function showLogin() {
+    document.getElementById('modalContent').innerHTML = `
+        <h2>تسجيل الدخول</h2>
+        <input id="loginUser" placeholder="اسم المستخدم"><br><br>
+        <input id="loginPass" type="password" placeholder="كلمة المرور"><br><br>
+        <button class="btn-primary" onclick="performLogin()">دخول</button>
+        <button onclick="closeModal()">إلغاء</button>
+    `;
+    document.getElementById('globalModal').classList.add('active');
+}
+function performLogin() {
+    const username = document.getElementById('loginUser').value.trim();
+    const password = document.getElementById('loginPass').value;
+    const user = DB.users.find(u => u.username === username && u.password === password);
+    if (user) {
+        user.lastLogin = new Date().toISOString();
+        user.loginCount = (user.loginCount || 0) + 1;
+        saveDB();
+        currentUser = user; persistUser();
+        updateNav(); closeModal();
+        navigate(user.role === 'admin' ? 'admin-dashboard' : user.role === 'pharmacy' ? 'pharmacy-dashboard' : 'home');
+        toast('مرحباً بك');
+    } else alert('بيانات خاطئة');
+}
+function showRegister() {
+    document.getElementById('modalContent').innerHTML = `
+        <h2>تسجيل جديد</h2>
+        <input id="regUser" placeholder="اسم المستخدم"><br><br>
+        <input id="regPass" type="password" placeholder="كلمة المرور"><br><br>
+        <select id="regRole"><option value="customer">عميل</option><option value="pharmacy">صيدلية</option></select><br><br>
+        <button class="btn-primary" onclick="performRegister()">تسجيل</button>
+        <button onclick="closeModal()">إلغاء</button>
+    `;
+    document.getElementById('globalModal').classList.add('active');
+}
+function performRegister() {
+    const username = document.getElementById('regUser').value.trim();
+    const password = document.getElementById('regPass').value;
+    const role = document.getElementById('regRole').value;
+    if (!username || !password) return alert('املأ الحقول');
+    if (DB.users.find(u => u.username === username)) return alert('اسم المستخدم موجود');
+    const newUser = { id: DB.nextUserId++, username, password, role, lastLogin: null, loginCount: 0 };
+    DB.users.push(newUser); saveDB();
+    currentUser = newUser; persistUser();
+    updateNav(); closeModal();
+    navigate('home');
+    toast('تم التسجيل بنجاح');
+}
+function closeModal() { document.getElementById('globalModal').classList.remove('active'); }
+
+// ========== بدء التشغيل ==========
+loadDB();
+updateNav();
+navigate('home');
+</script>
+</body>
+</html>
